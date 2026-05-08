@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(git stash *)",
+      "Bash(git restore *)",
+      "Bash(./gradlew :common:build *)",
+      "Bash(./gradlew :common:compileJava *)",
+      "Bash(java -version)",
+      "Bash(./gradlew --version)",
+      "WebSearch",
+      "Bash(git ls-tree *)"
+    ]
+  }
+}

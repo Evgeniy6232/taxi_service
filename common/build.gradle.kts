@@ -1,0 +1,8 @@
+plugins {
+    java
+}
+
+dependencies {
+    compileOnly("org.projectlombok:lombok:1.18.46")
+    annotationProcessor("org.projectlombok:lombok:1.18.46")
+}
