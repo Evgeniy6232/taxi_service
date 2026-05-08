@@ -9,7 +9,8 @@
       "Bash(java -version)",
       "Bash(./gradlew --version)",
       "WebSearch",
-      "Bash(git ls-tree *)"
+      "Bash(git ls-tree *)",
+      "Bash(./gradlew :user-service:build *)"
     ]
   }
 }
