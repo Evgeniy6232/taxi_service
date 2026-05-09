@@ -1,6 +1,7 @@
 package com.taxi.trip.messaging;
 
 import com.taxi.common.enums.TripStatus;
+import com.taxi.common.messaging.TripEvent;
 import com.taxi.trip.entity.Trip;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;

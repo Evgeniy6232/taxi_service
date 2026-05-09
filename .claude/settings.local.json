@@ -11,7 +11,8 @@
       "WebSearch",
       "Bash(git ls-tree *)",
       "Bash(./gradlew :user-service:build *)",
-      "Bash(./gradlew :trip-service:build *)"
+      "Bash(./gradlew :trip-service:build *)",
+      "Bash(./gradlew :notification-service:build *)"
     ]
   }
 }
