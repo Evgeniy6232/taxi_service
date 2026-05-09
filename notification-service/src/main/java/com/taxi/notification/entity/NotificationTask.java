@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -56,6 +57,11 @@ public class NotificationTask {
     @Column(nullable = false)
     @Builder.Default
     private int attempts = 0;
+
+    @Version
+    private Long version;
+
+    // version удобная шутка. Своего рода маркер, когда смотрел видос на ютубе про многопоточность, рассказывали про это
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
