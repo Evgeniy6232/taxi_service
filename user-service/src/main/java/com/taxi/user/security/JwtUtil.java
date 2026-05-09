@@ -36,6 +36,17 @@ public class JwtUtil {
                 .compact();
     }
 
+    public String generateServiceToken() {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject("service")
+                .claim("role", "SERVICE")
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expiration * 365))
+                .signWith(key)
+                .compact();
+    }
+
     public Claims validateToken(String token) {
         return Jwts.parser()
                 .verifyWith(key)
