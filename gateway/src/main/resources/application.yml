@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+        - id: user-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/profile/**,/passengers/**,/drivers/**
+          filters:
+            - JwtAuth
+        - id: trip-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/trips/**,/stats/**
+          filters:
+            - JwtAuth
+        - id: notification-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/notifications/**
+          filters:
+            - JwtAuth
+
+jwt:
+  secret: super-secret-key-at-least-256-bits-long-for-hs256

@@ -12,7 +12,11 @@
       "Bash(git ls-tree *)",
       "Bash(./gradlew :user-service:build *)",
       "Bash(./gradlew :trip-service:build *)",
-      "Bash(./gradlew :notification-service:build *)"
+      "Bash(./gradlew :notification-service:build *)",
+      "Bash(mkdir -p gateway/src/main/java/com/taxi/gateway/config)",
+      "Bash(mkdir -p gateway/src/main/resources)",
+      "Bash(./gradlew :gateway:build *)",
+      "Bash(./gradlew build *)"
     ]
   }
 }
