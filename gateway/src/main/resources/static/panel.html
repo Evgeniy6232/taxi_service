@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxi Service — Test Panel</title>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+    --green: #4ade80; --red: #f87171; --yellow: #fbbf24;
+    --btn: #2563eb; --btn-hover: #1d4ed8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font:14px/1.5 system-ui,sans-serif; padding:20px; }
+  h1 { font-size:22px; margin-bottom:4px; }
+  .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .status-dots { display:flex; gap:12px; }
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:4px; }
+  .dot.on { background:var(--green); } .dot.off { background:var(--red); }
+  .tabs { display:flex; gap:4px; margin-bottom:16px; flex-wrap:wrap; }
+  .tab { padding:8px 16px; background:var(--card); border:1px solid var(--border); border-radius:6px 6px 0 0; cursor:pointer; color:var(--muted); }
+  .tab.active { background:var(--btn); color:#fff; border-color:var(--btn); }
+  .panel { background:var(--card); border:1px solid var(--border); border-radius:0 8px 8px 8px; padding:20px; display:none; }
+  .panel.active { display:block; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .col { flex:1; min-width:200px; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  input,select { width:100%; padding:8px 10px; background:#0f172a; border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px; }
+  input:focus,select:focus { outline:none; border-color:var(--accent); }
+  button { padding:8px 20px; background:var(--btn); color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; white-space:nowrap; }
+  button:hover { background:var(--btn-hover); }
+  button.danger { background:#dc2626; } button.danger:hover { background:#b91c1c; }
+  button.small { padding:4px 12px; font-size:12px; }
+  .log { margin-top:20px; background:#000; border-radius:8px; padding:12px; max-height:300px; overflow-y:auto; font:12px monospace; }
+  .log .req { color:var(--accent); } .log .res { color:var(--green); }
+  .log .err { color:var(--red); } .log .info { color:var(--muted); }
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; }
+  .badge.green { background:#166534; color:var(--green); }
+  .badge.yellow { background:#713f12; color:var(--yellow); }
+  .token-bar { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+  .token-bar .token { flex:1; font:11px monospace; color:var(--muted); word-break:break-all; }
+  .token-bar .label { font-size:11px; color:var(--muted); }
+  .result { background:#0f172a; border-radius:6px; padding:10px; margin-top:12px; font:12px monospace; white-space:pre-wrap; max-height:200px; overflow-y:auto; }
+  .flex-between { display:flex; justify-content:space-between; align-items:center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Taxi Service Panel</h1>
+    <span style="color:var(--muted);font-size:12px;">Тестовый интерфейс для всех трёх сервисов</span>
+  </div>
+  <div class="status-dots">
+    <span><span class="dot" id="d1"></span>User :8081</span>
+    <span><span class="dot" id="d2"></span>Trip :8082</span>
+    <span><span class="dot" id="d3"></span>Notify :8083</span>
+  </div>
+</div>
+
+<div class="token-bar">
+  <div>
+    <span class="label">JWT токен</span><br>
+    <span class="token" id="tokenDisplay">— нет токена —</span>
+  </div>
+  <div>
+    <span class="label">Роль</span><br>
+    <span id="roleDisplay" style="font-size:12px;">—</span>
+  </div>
+  <button onclick="clearToken()" class="small danger">Выйти</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="auth">Логин / Регистрация</div>
+  <div class="tab" data-tab="users">Пассажиры и Водители</div>
+  <div class="tab" data-tab="trip">Создать поездку</div>
+  <div class="tab" data-tab="manage">Управление поездкой</div>
+  <div class="tab" data-tab="stats">Статистика и Уведомления</div>
+</div>
+
+<!-- Tab: Auth -->
+<div class="panel active" id="tab-auth">
+  <div class="row">
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Регистрация пассажира</h3>
+      <label>Имя</label><input id="p_name" value="Иван">
+      <label>Телефон</label><input id="p_phone" value="+79991112233">
+      <label>Email</label><input id="p_email" value="ivan@mail.ru">
+      <label>Пароль</label><input id="p_pass" value="123456" type="password">
+      <button onclick="regPassenger()" style="margin-top:12px;width:100%;">Зарегистрировать пассажира</button>
+    </div>
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Регистрация водителя</h3>
+      <label>Имя</label><input id="d_name" value="Водитель Алексей">
+      <label>Email</label><input id="d_email" value="alexey@mail.ru">
+      <label>Телефон</label><input id="d_phone" value="+79991112244">
+      <label>Пароль</label><input id="d_pass" value="123456" type="password">
+      <button onclick="regDriver()" style="margin-top:12px;width:100%;">Зарегистрировать водителя</button>
+      <button onclick="regThreeDrivers()" style="margin-top:8px;width:100%;" class="small">Зарегистрировать 3 водителей разом</button>
+    </div>
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Вход</h3>
+      <label>Email</label><input id="l_email" value="ivan@mail.ru">
+      <label>Пароль</label><input id="l_pass" value="123456" type="password">
+      <button onclick="login()" style="margin-top:12px;width:100%;">Войти</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Users -->
+<div class="panel" id="tab-users">
+  <div class="row">
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Пассажиры</h3>
+      <label>ID пассажира</label><input id="get_pid" value="1">
+      <button onclick="getPassenger()" style="margin-top:8px;width:100%;">Получить профиль</button>
+      <div class="result" id="passengerResult"></div>
+    </div>
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Водители</h3>
+      <label>ID водителя</label><input id="get_did" value="1">
+      <button onclick="getDriver()" style="margin-top:8px;width:100%;">Получить профиль</button>
+      <button onclick="getFreeDrivers()" style="margin-top:8px;width:100%;">Свободные водители (Redis)</button>
+      <label style="margin-top:8px;">Статус</label>
+      <select id="driverStatus"><option>FREE</option><option>BUSY</option><option>OFFLINE</option></select>
+      <button onclick="updateDriverStatus()" style="margin-top:8px;width:100%;">Сменить статус</button>
+      <div class="result" id="driverResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Create Trip -->
+<div class="panel" id="tab-trip">
+  <div class="row">
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Данные поездки</h3>
+      <label>ID пассажира</label><input id="t_passenger" value="1">
+      <label>Откуда (адрес)</label><input id="t_origin" value="Москва, Красная площадь">
+      <label>Куда (адрес)</label><input id="t_dest" value="Москва, ВДНХ">
+    </div>
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Координаты</h3>
+      <label>Широта отправления</label><input id="t_olat" value="55.7539">
+      <label>Долгота отправления</label><input id="t_olng" value="37.6208">
+      <label>Широта назначения</label><input id="t_dlat" value="55.8262">
+      <label>Долгота назначения</label><input id="t_dlng" value="37.6376">
+    </div>
+    <div class="col" style="display:flex;flex-direction:column;justify-content:flex-end;">
+      <button onclick="createTrip()" style="width:100%;padding:14px;font-size:16px;">Заказать такси</button>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted);">
+        Расстояние ~9.5 км × 50 ₽/км ≈ 475 ₽
+      </div>
+    </div>
+  </div>
+  <div class="result" id="tripCreateResult"></div>
+</div>
+
+<!-- Tab: Manage Trip -->
+<div class="panel" id="tab-manage">
+  <div class="row">
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Смена статуса</h3>
+      <label>ID поездки</label><input id="m_tid" value="1">
+      <label>Новый статус</label>
+      <select id="m_status">
+        <option>IN_PROGRESS</option><option>COMPLETED</option><option>CANCELLED</option>
+      </select>
+      <button onclick="updateTripStatus()" style="margin-top:8px;width:100%;">Обновить статус</button>
+    </div>
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Оценка</h3>
+      <label>ID поездки</label><input id="r_tid" value="1">
+      <label>Оценка (1-5)</label>
+      <select id="r_rating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+      <button onclick="rateTrip()" style="margin-top:8px;width:100%;">Поставить оценку</button>
+    </div>
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Информация</h3>
+      <label>ID поездки</label><input id="i_tid" value="1">
+      <button onclick="getTrip()" style="margin-top:8px;width:100%;">Посмотреть поездку</button>
+      <button onclick="getTripHistory()" style="margin-top:8px;width:100%;">История (passenger_id=1)</button>
+    </div>
+  </div>
+  <div class="result" id="manageResult"></div>
+</div>
+
+<!-- Tab: Stats & Notifications -->
+<div class="panel" id="tab-stats">
+  <div class="row">
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Статистика</h3>
+      <button onclick="getStats()" style="width:100%;">Дневная статистика</button>
+      <div class="result" id="statsResult"></div>
+    </div>
+    <div class="col">
+      <h3 style="margin-bottom:12px;">Уведомления</h3>
+      <label>ID поездки</label><input id="n_tid" value="1">
+      <button onclick="getNotifications()" style="margin-top:8px;width:100%;">Список уведомлений</button>
+      <div class="result" id="notifyResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Log -->
+<div class="log" id="log">
+  <div class="info">=== Панель готова. Проверка соединений... ===</div>
+</div>
+
+const API = { user:'http://localhost:8080', trip:'http://localhost:8080', notify:'http://localhost:8080' };
+let TOKEN = '';
+let ROLE = '';
+let USER_ID = '';
+
+function log(type, msg) {
+  const el = document.getElementById('log');
+  el.innerHTML += '<div class="' + type + '">[' + new Date().toLocaleTimeString() + '] ' + msg + '</div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+function setToken(token, role, userId) {
+  TOKEN = token; ROLE = role; USER_ID = userId || '';
+  document.getElementById('tokenDisplay').textContent = token;
+  document.getElementById('roleDisplay').textContent = (role || '--') + (USER_ID ? ' #' + USER_ID : '');
+}
+
+function clearToken() { setToken('','',''); log('info','Token cleared'); }
+
+async function call(method, url, body, useAuth) {
+  if (useAuth === undefined) useAuth = true;
+  var headers = { 'Content-Type':'application/json' };
+  if (useAuth && TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+  var opts = { method: method, headers: headers };
+  if (body) opts.body = JSON.stringify(body);
+  log('req', method + ' ' + url + ' ' + (body ? JSON.stringify(body) : ''));
+  try {
+    var res = await fetch(url, opts);
+    var text = await res.text();
+    var data;
+    try { data = JSON.parse(text); } catch(e) { data = text; }
+    log(res.ok ? 'res' : 'err', res.status + ' ' + JSON.stringify(data).substring(0,400));
+    return { ok: res.ok, status: res.status, data: data };
+  } catch(e) {
+    log('err', 'NET: ' + e.message);
+    return { ok: false, status: 0, data: e.message };
+  }
+}
+
+// ============ AUTH ============
+async function regPassenger() {
+  var r = await call('POST', API.user+'/auth/register', {
+    name: gv('p_name'), phone: gv('p_phone'), email: gv('p_email'), password: gv('p_pass'), userType: 'PASSENGER'
+  }, false);
+  if (r.ok) log('info', 'Passenger created: id=' + r.data.userId);
+}
+async function regDriver() {
+  var r = await call('POST', API.user+'/auth/register', {
+    name: gv('d_name'), phone: gv('d_phone'), email: gv('d_email'), password: gv('d_pass'), userType: 'DRIVER'
+  }, false);
+  if (r.ok) log('info', 'Driver created: id=' + r.data.userId);
+}
+async function regThreeDrivers() {
+  var drivers = [
+    {name:'Alexey',email:'alexey@mail.ru',phone:'+79991112244',password:'123456',userType:'DRIVER'},
+    {name:'Boris',email:'boris@mail.ru',phone:'+79991112255',password:'123456',userType:'DRIVER'},
+    {name:'Viktor',email:'viktor@mail.ru',phone:'+79991112266',password:'123456',userType:'DRIVER'},
+  ];
+  for (var i = 0; i < drivers.length; i++) {
+    var d = drivers[i];
+    var r = await call('POST', API.user+'/auth/register', d, false);
+    if (r.ok) log('info', 'Driver created: id=' + r.data.userId);
+  }
+}
+async function login() {
+  var r = await call('POST', API.user+'/auth/login', {
+    email: gv('l_email'), password: gv('l_pass')
+  }, false);
+  if (r.ok && r.data.token) {
+    try {
+      var p = JSON.parse(atob(r.data.token.split('.')[1]));
+      setToken(r.data.token, p.role, p.sub);
+    } catch(e) {
+      setToken(r.data.token, 'USER');
+    }
+    log('info', 'Login OK: role=' + ROLE + ' id=' + USER_ID);
+  }
+}
+
+// ============ USERS ============
+async function getPassenger() {
+  var r = await call('GET', API.user+'/profile');
+  document.getElementById('passengerResult').textContent = JSON.stringify(r.data, null, 2);
+}
+async function getDriver() {
+  var r = await call('GET', API.user+'/profile');
+  document.getElementById('driverResult').textContent = JSON.stringify(r.data, null, 2);
+}
+async function getFreeDrivers() {
+  var r = await call('GET', API.user+'/profile');
+  document.getElementById('driverResult').textContent = JSON.stringify(r.data, null, 2);
+}
+async function updateDriverStatus() {
+  var r = await call('PATCH', API.user+'/profile', { name: gv('driverStatus') });
+  document.getElementById('driverResult').textContent = JSON.stringify(r.data, null, 2);
+}
+
+// ============ TRIPS ============
+async function createTrip() {
+  var body = {
+    origin: gv('t_origin'), destination: gv('t_dest'),
+    originLat: parseFloat(gv('t_olat')), originLng: parseFloat(gv('t_olng')),
+    destLat: parseFloat(gv('t_dlat')), destLng: parseFloat(gv('t_dlng'))
+  };
+  var r = await call('POST', API.trip+'/trips', body);
+  document.getElementById('tripCreateResult').textContent = JSON.stringify(r.data, null, 2);
+  if (r.ok) {
+    log('info', 'Trip #' + r.data.id + ' created! Price: ' + r.data.price + ' RUB, Driver: #' + r.data.driverId);
+    document.getElementById('m_tid').value = r.data.id;
+    document.getElementById('r_tid').value = r.data.id;
+    document.getElementById('i_tid').value = r.data.id;
+    document.getElementById('n_tid').value = r.data.id;
+  }
+}
+async function getTrip() {
+  var r = await call('GET', API.trip+'/trips/'+gv('i_tid'));
+  document.getElementById('manageResult').textContent = JSON.stringify(r.data, null, 2);
+}
+async function getTripHistory() {
+  var r = await call('GET', API.trip+'/trips');
+  document.getElementById('manageResult').textContent = JSON.stringify(r.data, null, 2);
+}
+async function updateTripStatus() {
+  var r = await call('PATCH', API.trip+'/trips/'+gv('m_tid')+'/status', {status: gv('m_status')});
+  document.getElementById('manageResult').textContent = JSON.stringify(r.data, null, 2);
+  if (r.ok) log('info', 'Trip #' + gv('m_tid') + ' status -> ' + gv('m_status'));
+}
+async function rateTrip() {
+  var r = await call('POST', API.trip+'/trips/'+gv('r_tid')+'/rate', {rating: parseInt(gv('r_rating'))});
+  document.getElementById('manageResult').textContent = JSON.stringify(r.data, null, 2);
+  if (r.ok) log('info', 'Rated ' + gv('r_rating') + ' for trip #' + gv('r_tid'));
+}
+
+// ============ STATS & NOTIFICATIONS ============
+async function getStats() {
+  var r = await call('GET', API.trip+'/stats?date=2026-05-10');
+  document.getElementById('statsResult').textContent = JSON.stringify(r.data, null, 2);
+}
+async function getNotifications() {
+  var r = await call('GET', API.notify+'/notifications');
+  document.getElementById('notifyResult').textContent = JSON.stringify(r.data, null, 2);
+}
+
+// ============ HELPERS ============
+function gv(id) { return document.getElementById(id).value; }
+
+// Tabs
+document.querySelectorAll('.tab').forEach(function(t) {
+  t.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(x) { x.classList.remove('active'); });
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+// Health check
+(async function check() {
+  try {
+    var r = await fetch(API.user+'/auth/login', {method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    document.getElementById('d1').classList.add(r.status > 0 ? 'on' : 'off');
+    document.getElementById('d2').classList.add(r.status > 0 ? 'on' : 'off');
+    document.getElementById('d3').classList.add(r.status > 0 ? 'on' : 'off');
+    log('info', 'Gateway ' + API.user + ' - OK');
+  } catch(e) {
+    document.getElementById('d1').classList.add('off');
+    document.getElementById('d2').classList.add('off');
+    document.getElementById('d3').classList.add('off');
+    log('err', 'Gateway ' + API.user + ' - OFFLINE');
+  }
+})();
+</script>
+</body>
+</html>
