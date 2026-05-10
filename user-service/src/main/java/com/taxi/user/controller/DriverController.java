@@ -4,6 +4,7 @@ import com.taxi.user.dto.UpdateDriverStatusRequest;
 import com.taxi.user.entity.Driver;
 import com.taxi.user.repo.DriverRepo;
 import com.taxi.user.service.DriverCacheService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -40,7 +41,7 @@ public class DriverController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
-                                          @RequestBody UpdateDriverStatusRequest req) {
+                                          @Valid @RequestBody UpdateDriverStatusRequest req) {
         Driver driver = driverRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Водитель не найден"));
 

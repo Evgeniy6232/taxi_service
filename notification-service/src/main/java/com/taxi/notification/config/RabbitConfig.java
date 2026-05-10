@@ -1,5 +1,7 @@
 package com.taxi.notification.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -26,19 +28,13 @@ public class RabbitConfig {
 
     @Bean
     public Binding binding(Queue tripEventsQueue, TopicExchange tripEventsExchange) {
-        return BindingBuilder.bind(tripEventsQueue).to(tripEventsExchange).with("#"); // вместо # можно поставить *. (Одно слово)
+        return BindingBuilder.bind(tripEventsQueue).to(tripEventsExchange).with("#");
     }
 
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return new Jackson2JsonMessageConverter(mapper);
     }
-    // очень важная штука, ибо по шаблону создается бинарка, а так сразу JSON
 }
-
-
-//В целом rabbit это некая цепочка
-//  отправитель - EXCHANGE - Binding - QUEUE - получатель
-// exchange - занимается маршрутизацией
-// binding - правила очередности
-// queue - хранилеще в котором жду обраобтку

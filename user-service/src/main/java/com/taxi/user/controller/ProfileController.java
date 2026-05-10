@@ -1,11 +1,13 @@
 package com.taxi.user.controller;
 
+import com.taxi.common.enums.DriverStatus;
 import com.taxi.user.dto.UpdateProfileRequest;
 import com.taxi.user.entity.Driver;
 import com.taxi.user.entity.Passenger;
 import com.taxi.user.repo.DriverRepo;
 import com.taxi.user.repo.PassengerRepo;
 import com.taxi.user.repo.UserRepo;
+import com.taxi.user.service.DriverCacheService;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,12 +24,14 @@ public class ProfileController {
     private final UserRepo userRepo;
     private final PassengerRepo passengerRepo;
     private final DriverRepo driverRepo;
+    private final DriverCacheService driverCacheService;
 
     public ProfileController(UserRepo userRepo, PassengerRepo passengerRepo,
-                             DriverRepo driverRepo) {
+                             DriverRepo driverRepo, DriverCacheService driverCacheService) {
         this.userRepo = userRepo;
         this.passengerRepo = passengerRepo;
         this.driverRepo = driverRepo;
+        this.driverCacheService = driverCacheService;
     }
 
     @GetMapping
@@ -65,6 +69,15 @@ public class ProfileController {
                     .orElseThrow(() -> new IllegalArgumentException("Водитель не найден"));
             if (req.getName() != null) d.setName(req.getName());
             if (req.getPhone() != null) d.setPhone(req.getPhone());
+            if (req.getStatus() != null) {
+                d.setStatus(DriverStatus.valueOf(req.getStatus()));
+                Driver saved = driverRepo.save(d);
+                switch (saved.getStatus()) {
+                    case FREE -> driverCacheService.markFree(saved.getId());
+                    case BUSY, OFFLINE -> driverCacheService.markBusy(saved.getId());
+                }
+                return ResponseEntity.ok(saved);
+            }
             return ResponseEntity.ok(driverRepo.save(d));
         }
     }

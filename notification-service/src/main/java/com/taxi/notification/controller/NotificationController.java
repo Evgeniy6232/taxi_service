@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -24,13 +25,18 @@ public class NotificationController {
         this.taskRepo = taskRepo;
     }
 
+    @GetMapping(params = "trip_id")
+    public ResponseEntity<List<NotificationTask>> getByTrip(@RequestParam("trip_id") Long tripId) {
+        return ResponseEntity.ok(taskRepo.findByTripId(tripId));
+    }
+
     @GetMapping
     public ResponseEntity<List<NotificationTask>> getNotifications(Authentication auth) {
         Claims claims = (Claims) auth.getDetails();
         Long refId = claims.get("refId", Long.class);
-        return ResponseEntity.ok(taskRepo.findByRecipientIdOrderByCreatedAtDesc(refId));
+        String role = claims.get("role", String.class);
+        return ResponseEntity.ok(taskRepo.findByRecipientIdAndRecipientTypeOrderByCreatedAtDesc(refId, role));
     }
-
 
     @PatchMapping("/{id}")
     public ResponseEntity<Map<String, String>> markAsRead(@PathVariable Long id,

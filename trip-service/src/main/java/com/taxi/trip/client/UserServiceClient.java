@@ -2,6 +2,8 @@ package com.taxi.trip.client;
 
 import com.taxi.trip.security.JwtUtil;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @Service
 public class UserServiceClient {
+
+    private static final Logger log = LoggerFactory.getLogger(UserServiceClient.class);
 
     private final RestClient restClient = RestClient.create();
     private final JwtUtil jwtUtil;
@@ -34,8 +38,10 @@ public class UserServiceClient {
         return restClient.get()
                 .uri(userServiceUrl + "/passengers/{id}", passengerId)
                 .header("Authorization", "Bearer " + serviceToken)
-                .exchange((req, res) -> res.getStatusCode().is2xxSuccessful());
-        // exchange отличный варинт как по мне, ибо мы просто получаем на выходе статус. 200 / 404
+                .exchange((req, res) -> {
+                    log.info("passengerExists({}) → status {}", passengerId, res.getStatusCode());
+                    return res.getStatusCode().is2xxSuccessful();
+                });
     }
 
     public List<Long> getFreeDrivers() {

@@ -33,8 +33,18 @@ public class JwtFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = jwtUtil.validateToken(header.substring(7));
-                Long userId = jwtUtil.extractUserId(claims);
                 String role = jwtUtil.extractRole(claims);
+
+                // Служебный токен — не извлекаем userId (sub = "trip-service")
+                if ("SERVICE".equals(role)) {
+                    var auth = new UsernamePasswordAuthenticationToken(
+                            null, null, List.of(new SimpleGrantedAuthority("ROLE_SERVICE")));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                Long userId = jwtUtil.extractUserId(claims);
 
                 var auth = new UsernamePasswordAuthenticationToken(
                         userId,

@@ -30,7 +30,7 @@ public class TripEventPublisher {
                 .message("Новая поездка: " + trip.getOrigin() + " → " + trip.getDestination())
                 .timestamp(Instant.now())
                 .build();
-        rabbitTemplate.convertAndSend(EXCHANGE, event);
+        rabbitTemplate.convertAndSend(EXCHANGE, "", event);
     }
 
     public void publishStatusChange(Trip trip, TripStatus newStatus) {
@@ -65,6 +65,6 @@ public class TripEventPublisher {
                 .message(message)
                 .timestamp(Instant.now())
                 .build();
-        rabbitTemplate.convertAndSend(EXCHANGE, event);
+        rabbitTemplate.convertAndSend(EXCHANGE, "", event);
     }
 }

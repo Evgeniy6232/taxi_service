@@ -23,12 +23,18 @@ public class StatsController {
         this.tripService = tripService;
     }
 
+    @GetMapping("/daily")
+    public ResponseEntity<StatsResponse> getDailyStats() {
+        return ResponseEntity.ok(tripService.getDailyStats());
+    }
+
     @GetMapping
     public ResponseEntity<StatsResponse> getStats(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             Authentication auth) {
         Claims claims = (Claims) auth.getDetails();
-        Long driverId = claims.get("refId", Long.class);
-        return ResponseEntity.ok(tripService.getStats(date, driverId));
+        String role = claims.get("role", String.class);
+        Long refId = claims.get("refId", Long.class);
+        return ResponseEntity.ok(tripService.getStats(date, role, refId));
     }
 }

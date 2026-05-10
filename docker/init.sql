@@ -85,3 +85,15 @@ CREATE TABLE notifications.notification_tasks (
 
 CREATE INDEX idx_nt_status ON notifications.notification_tasks(status);
 CREATE INDEX idx_nt_recipient ON notifications.notification_tasks(recipient_id);
+
+-- Меняем владельца таблиц на соответствующих пользователей
+ALTER TABLE users.users OWNER TO user_service;
+ALTER TABLE users.passengers OWNER TO user_service;
+ALTER TABLE users.drivers OWNER TO user_service;
+ALTER TABLE trips.trips OWNER TO trip_service;
+ALTER TABLE notifications.notification_tasks OWNER TO notification_service;
+
+-- Права на существующие таблицы (избыточно при смене владельца, но не помешает)
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA users TO user_service;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA trips TO trip_service;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA notifications TO notification_service;

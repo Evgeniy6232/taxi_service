@@ -4,11 +4,12 @@ import com.taxi.common.dto.StatsResponse;
 import com.taxi.common.dto.TripCreateRequest;
 import com.taxi.common.dto.TripResponse;
 import com.taxi.common.enums.TripStatus;
-import com.taxi.common.enums.UserType;
 import com.taxi.trip.client.UserServiceClient;
 import com.taxi.trip.entity.Trip;
 import com.taxi.trip.messaging.TripEventPublisher;
 import com.taxi.trip.repo.TripRepo;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -77,7 +78,7 @@ public class TripService {
         return mapToResponse(trip);
     }
 
-    public List<TripResponse> getTripHistory(Long userId, String role, Long refId) {
+    public List<TripResponse> getTripHistory(String role, Long refId) {
         List<Trip> trips;
         if ("PASSENGER".equals(role)) {
             trips = tripRepo.findByPassengerIdOrderByCreatedAtDesc(refId);
@@ -85,6 +86,35 @@ public class TripService {
             trips = tripRepo.findByDriverIdOrderByCreatedAtDesc(refId);
         }
         return trips.stream().map(this::mapToResponse).toList();
+    }
+
+    public List<TripResponse> getByPassenger(Long passengerId) {
+        Long authUserId = getCurrentUserId();
+        if (!authUserId.equals(passengerId)) {
+            throw new IllegalArgumentException("Вы можете смотреть только свои поездки");
+        }
+        return tripRepo.findByPassengerIdOrderByCreatedAtDesc(passengerId)
+                .stream().map(this::mapToResponse).toList();
+    }
+
+    public StatsResponse getDailyStats() {
+        LocalDate today = LocalDate.now();
+        Long count = tripRepo.countToday();
+        BigDecimal avg = tripRepo.averagePriceToday();
+        if (avg == null) avg = BigDecimal.ZERO;
+        return new StatsResponse(
+                today,
+                count,
+                avg.setScale(2, RoundingMode.HALF_UP)
+        );
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Long id) {
+            return id;
+        }
+        throw new IllegalStateException("Пользователь не аутентифицирован");
     }
 
     public TripResponse getTrip(Long tripId) {
@@ -121,6 +151,9 @@ public class TripService {
             if (trip.getStatus() == TripStatus.IN_PROGRESS && newStatus != TripStatus.COMPLETED) {
                 throw new IllegalArgumentException("Поездка уже в процессе");
             }
+            if (trip.getStatus() == TripStatus.COMPLETED || trip.getStatus() == TripStatus.CANCELLED) {
+                throw new IllegalArgumentException("Нельзя изменить завершённую или отменённую поездку");
+            }
         }
 
         trip.setStatus(newStatus);
@@ -154,10 +187,15 @@ public class TripService {
         tripRepo.save(trip);
     }
 
-    public StatsResponse getStats(LocalDate date, Long driverId) {
+    public StatsResponse getStats(LocalDate date, String role, Long refId) {
         var start = date.atStartOfDay();
         var end = date.plusDays(1).atStartOfDay();
-        List<Trip> trips = tripRepo.findByDriverIdAndCreatedAtBetween(driverId, start, end);
+        List<Trip> trips;
+        if ("DRIVER".equals(role)) {
+            trips = tripRepo.findByDriverIdAndCreatedAtBetween(refId, start, end);
+        } else {
+            trips = tripRepo.findByPassengerIdAndCreatedAtBetween(refId, start, end);
+        }
 
         long count = trips.size();
         double avg = trips.stream()

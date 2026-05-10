@@ -11,4 +11,8 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-parameters")
+    }
 }

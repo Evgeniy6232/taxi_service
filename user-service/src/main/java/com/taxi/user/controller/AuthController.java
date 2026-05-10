@@ -4,6 +4,7 @@ import com.taxi.common.dto.LoginRequest;
 import com.taxi.common.dto.RegisterRequest;
 import com.taxi.user.entity.User;
 import com.taxi.user.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest req) {
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest req) {
         User user = authService.register(req);
         return ResponseEntity.ok(Map.of(
                 "message", "Регистрация успешна",
@@ -33,7 +34,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest req) {
         String token = authService.login(req);
         return ResponseEntity.ok(Map.of("token", token));
     }

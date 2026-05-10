@@ -26,8 +26,9 @@ public class JwtUtil {
     public String generateToken(User user) {
         Date now = new Date();
         return Jwts.builder()
-                .subject(user.getId().toString())
+                .subject(user.getRefId().toString())
                 .claim("refId", user.getRefId())
+                .claim("userId", user.getId())
                 .claim("role", user.getUserType().name())
                 .claim("email", user.getEmail())
                 .issuedAt(now)

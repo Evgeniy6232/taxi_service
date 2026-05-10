@@ -16,7 +16,13 @@
       "Bash(mkdir -p gateway/src/main/java/com/taxi/gateway/config)",
       "Bash(mkdir -p gateway/src/main/resources)",
       "Bash(./gradlew :gateway:build *)",
-      "Bash(./gradlew build *)"
+      "Bash(./gradlew build *)",
+      "Bash(./gradlew :gateway:compileJava *)",
+      "Bash(./gradlew :trip-service:compileJava *)",
+      "Bash(head -209 gateway/src/main/resources/static/panel.html)",
+      "Bash(cat panel_js.txt)",
+      "Bash(cp /tmp/panel_final.html gateway/src/main/resources/static/panel.html)",
+      "Bash(cp /tmp/panel_final.html user-service/src/main/resources/static/panel.html)"
     ]
   }
 }
